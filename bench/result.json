@@ -1,0 +1,90 @@
+{
+  "scene": {
+    "triangleCount": 302,
+    "labelCount": 40,
+    "viewport": {
+      "w": 1200,
+      "h": 760
+    },
+    "seed": 20261113
+  },
+  "method": {
+    "repeats": 7,
+    "warmup": 1,
+    "timing": "performance.now() around the whole call; median of the repeats reported",
+    "note": "coldStartMs is the very first invocation of placeLabels in this process, before any warmup"
+  },
+  "timings": {
+    "placeLabels": {
+      "coldStartMs": 13.233,
+      "n": 7,
+      "min": 1.937,
+      "p25": 1.967,
+      "median": 2.184,
+      "p75": 2.284,
+      "p95": 3.383,
+      "max": 3.383,
+      "mean": 2.287,
+      "stddev": 0.463,
+      "rsdPct": 20.228
+    },
+    "naivePlaceAtAnchor": {
+      "n": 7,
+      "min": 0.076,
+      "p25": 0.1,
+      "median": 0.12,
+      "p75": 0.195,
+      "p95": 0.503,
+      "max": 0.503,
+      "mean": 0.182,
+      "stddev": 0.136,
+      "rsdPct": 74.792
+    },
+    "auditVisibility": {
+      "n": 7,
+      "min": 1.094,
+      "p25": 1.137,
+      "median": 1.269,
+      "p75": 1.55,
+      "p95": 1.745,
+      "max": 1.745,
+      "mean": 1.343,
+      "stddev": 0.219,
+      "rsdPct": 16.296
+    },
+    "oracleVisibility": {
+      "n": 7,
+      "min": 4.651,
+      "p25": 4.663,
+      "median": 4.846,
+      "p75": 5.504,
+      "p95": 12.681,
+      "max": 12.681,
+      "mean": 6.017,
+      "stddev": 2.734,
+      "rsdPct": 45.438
+    }
+  },
+  "occlusionMicro": {
+    "oracleOcclusionOnly": {
+      "rayCount": 40,
+      "triangleCount": 302,
+      "rayTriangleTests": 12080,
+      "ms": 4.097
+    }
+  },
+  "placement": {
+    "overlaps": {
+      "naive": 10,
+      "placer": 0
+    },
+    "leaderLengthPx": 571.2,
+    "visible": 14,
+    "occluded": 26,
+    "behind": 0
+  },
+  "correctness": {
+    "independentVisibilityAgreement": 40,
+    "totalLabels": 40
+  }
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>labelcast-lab — occlusion-aware 3D label placement</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b0e13; color: #e8ecf3;
+    font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #app { position: fixed; inset: 0; }
+  canvas#gl { position: absolute; inset: 0; display: block; }
+  #overlay { position: absolute; inset: 0; pointer-events: none; }
+  #leaders { position: absolute; inset: 0; }
+  .label { position: absolute; transform: translate(-50%, -50%);
+    border-radius: 3px; padding: 2px 5px; white-space: nowrap; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.25); background: rgba(19,26,38,.92); }
+  .label.visible  { border-color: #3ddc97; }
+  .label.occluded { border-color: #ff6b6b; opacity: .78; }
+  .label.behind   { display: none; }
+  #hud { position: absolute; top: 10px; left: 10px; max-width: 430px; padding: 10px 12px;
+    background: rgba(12,16,24,.88); border: 1px solid #2a3444; border-radius: 8px; }
+  #hud h1 { font-size: 13px; margin: 0 0 6px; letter-spacing: .02em; }
+  #hud .k { color: #8b9bb4; }
+  #hud b { color: #ffd166; }
+  #hud .row { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  #hud input[type=range] { width: 150px; }
+  code { color: #9ad0ff; }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app">
+  <canvas id="gl"></canvas>
+  <div id="overlay">
+    <canvas id="leaders"></canvas>
+    <div id="labels"></div>
+  </div>
+  <div id="hud">
+    <h1>labelcast-lab — occlusion-aware label placement</h1>
+    <div><span class="k">labels</span> <b id="s-total">–</b>
+         <span class="k">visible/occluded/behind</span> <b id="s-vis">–</b></div>
+    <div><span class="k">overlapping pairs</span> <b id="s-ov">–</b>
+         <span class="k">(baseline, drawn at anchor:</span> <b id="s-naive">–</b>)</div>
+    <div><span class="k">leader length</span> <b id="s-lead">–</b> px
+         <span class="k">place() time</span> <b id="s-ms">–</b> ms</div>
+    <div><span class="k">vs node bake</span> <b id="s-ref">–</b></div>
+    <div class="row"><span class="k">label width</span>
+      <input id="w" type="range" min="40" max="140" value="72"><b id="w-v">72</b>px</div>
+    <div class="row"><span class="k">candidate ring</span>
+      <input id="r" type="range" min="20" max="140" value="43"><b id="r-v">43</b>px</div>
+    <div><span class="k">drag to orbit · wheel to zoom — numbers above use the same</span>
+         <code>src/core.mjs</code> <span class="k">as node</span></div>
+  </div>
+</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
