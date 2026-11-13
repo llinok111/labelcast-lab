@@ -68,6 +68,17 @@ oracle 复核），再在该判定之上做离散候选的零重叠布局（A4/A
 与浏览器里跑，页面上显示的 overlaps / visible / occluded 与 node 烘焙的 `data/reference.json`
 逐项比对**（HUD 里的 "vs node bake" 一行），"所见即所验"。
 
+**诚实边界（独立 prior-art 复核后的定档理由，2026-11-13）**：屏幕空间的点要素标注去重是 1990 年代
+就成熟的教科书问题（Christensen/Marks/Shieber 1995, *ACM TOG*, DOI 10.1145/212332.212334；
+Edmondson et al. 1996, *Cartographica*, DOI 10.3138/u3n2-6363-130n-h870），射线求交与"最近遮挡面"
+也是标准 raycast（three.js `Raycaster` 本来就返回 `faceIndex`）。所以本仓**不主张新算法**；可辩护的
+新意是**把三件事装进同一条可复算管线**：(a) 三态可见性 + 遮挡三角形见证、(b) 离散候选的零重叠布局、
+(c) 不依赖 `stats` 的独立审计对象，并让同一份 core 在 node 与浏览器两端互相对账。只读 prior-art
+检查覆盖 three.js CSS2DRenderer/CSS3DRenderer v0.187.0 源码、deck.gl `CollisionFilterExtension`、
+Cesium `LabelCollection`、`labelgun`、`d3-labeler`、Mapbox GL symbol layers：**没有任何一个同时覆盖
+(a)(b)(c)**，也没有任何一个把遮挡三角形作为标注溯源输出。定档 **B（下限）**，差异点是审计/溯源层，
+不是布局搜索本身。
+
 ## Known limits (read this before trusting a number)
 
 - **Absolute constants are disclosed.** `TOL_RAY = 1e-9` (hit window, as a fraction of the
