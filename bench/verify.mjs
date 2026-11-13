@@ -90,18 +90,33 @@ const reOverlap = (() => {
 ok('A5 independent recount matches', audit.overlapCount === placed.stats.overlapCount && reOverlap === placed.stats.overlapCount,
   `auditPlacement=${audit.overlapCount} oracle-projected-recount=${reOverlap} stats=${placed.stats.overlapCount}`);
 
-/* A6 — optimality gap vs exhaustive optimum on a 6-label subset */
-const subsetIds = ['B-22', 'B-23', 'B-32', 'B-33', 'B-12', 'B-21'];
-const subset = subsetIds.map((id) => labels.find((l) => l.id === id));
-const subPlaced = placeLabels(subset, triangles, camera, viewport);
-const subBoxes = subPlaced.items.map((it) => it.box);
-const subLeaders = subPlaced.items.map((it) => it.leader);
-const oursCost = placementCost(subBoxes, subLeaders);
-const opt = oracleOptimal(subset, camera, viewport);
-const N_CAND = candidateOffsets(subset[0].w, subset[0].h).length;
-const gap = oursCost === 0 ? 0 : (oursCost - opt.cost) / Math.max(1, opt.cost);
-ok('A6 within 2% of exhaustive optimum (n=6)', oursCost <= opt.cost * 1.02 + 1e-9,
-  `ours cost=${oursCost.toFixed(3)} (overlaps=${subPlaced.stats.overlapCount}) optimum=${opt.cost.toFixed(3)} (overlaps=${opt.overlaps}) over ${N_CAND}^6=${N_CAND ** 6} combos, gap=${(gap * 100).toFixed(3)}%`);
+/* A6 — optimality gap vs exhaustive optimum on 6-label subsets.
+   A6a is the roomy default viewport; A6b forces crowding so the optimum must actually pay
+   leader length (A6a is vacuous — both sides cost 0 — and is reported as such, not as a win). */
+const checkSubset = (ids, vp) => {
+  const subset = ids.map((id) => labels.find((l) => l.id === id));
+  const subPlaced = placeLabels(subset, triangles, camera, vp);
+  const oursCost = placementCost(subPlaced.items.map((it) => it.box), subPlaced.items.map((it) => it.leader));
+  const opt = oracleOptimal(subset, camera, vp);
+  return { oursCost, opt, overlaps: subPlaced.stats.overlapCount, leader: subPlaced.stats.leaderLength };
+};
+const idsA = ['B-22', 'B-23', 'B-32', 'B-33', 'B-12', 'B-21'];
+const a6a = checkSubset(idsA, viewport);
+const N_CAND = candidateOffsets(labels[0].w, labels[0].h).length;
+ok('A6a default viewport (vacuous: both sides cost 0)', a6a.oursCost === 0 && a6a.opt.cost === 0,
+  `ours=${a6a.oursCost.toFixed(3)} optimum=${a6a.opt.cost.toFixed(3)} — no leader is needed at all here, so this proves feasibility, NOT optimality`);
+
+const crowdVp = { w: 320, h: 200 };
+const crowded = [
+  checkSubset(['B-11', 'B-12', 'B-21', 'B-22', 'B-10', 'B-20'], crowdVp),
+  checkSubset(['B-22', 'B-23', 'B-32', 'B-33', 'B-12', 'B-21'], crowdVp),
+  checkSubset(['B-00', 'B-01', 'B-10', 'B-11', 'B-02', 'B-12'], crowdVp),
+];
+const gaps = crowded.map((c) => (c.opt.cost === 0 ? 0 : (c.oursCost - c.opt.cost) / c.opt.cost));
+const worstGap = Math.max(...gaps);
+const detail = crowded.map((c, i) => `#${i + 1} ours=${c.oursCost.toFixed(1)} opt=${c.opt.cost.toFixed(1)} (${(gaps[i] * 100).toFixed(1)}%)`).join(' ');
+ok('A6b crowded viewport: real gap, honestly bounded', worstGap <= 0.30 && crowded.every((c) => c.overlaps === 0 && c.opt.overlaps === 0),
+  `${detail} over ${N_CAND}^6=${N_CAND ** 6} combos each, worst gap=${(worstGap * 100).toFixed(1)}% (NOT optimal — see README)`);
 
 /* A7 — scale invariance across 6 orders of magnitude */
 const scales = [1e-6, 1e-3, 1, 1e3, 1e6];

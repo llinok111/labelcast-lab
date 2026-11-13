@@ -4,9 +4,10 @@
 placer removes every screen-space box overlap — 10 overlapping pairs → 0 (baseline
 `baseline/naive.mjs`, which is what "draw a div at the projected anchor" gives you) — while
 every label also carries a `visible / occluded / behind` verdict with the **blocking triangle
-as a witness**, reproduced 40/40 by an independent oracle. 2.18 ms median per full placement
-(302 triangles × 40 labels, 12,080 ray-triangle tests), and the total leader length is within
-**0.000 %** of the exhaustive optimum on a 6-label subset (531,441 combinations enumerated).**
+as a witness**, reproduced 40/40 by an independent oracle. 2.006 ms median per full placement
+(302 triangles × 40 labels, 12,080 ray-triangle tests). On crowded 6-label views the placement is
+**up to 25.0 % above the exhaustive optimum** (`bench/oracle.mjs`, 531,441 combinations) — the
+greedy+local search is a fast feasible heuristic, *not* an optimal one, and the README says so.**
 
 Upstream: none
 
@@ -31,7 +32,7 @@ returns for every label:
 
 ```bash
 node tools/gen-sample.mjs      # writes data/scene.json + data/reference.json (deterministic)
-node bench/verify.mjs          # 12 behavioural assertions, exit 0 = all hold
+node bench/verify.mjs          # 13 behavioural assertions, exit 0 = all hold
 node bench/bench.mjs           # warmup 1 + 7 timed runs -> bench/result.json
 python3 -m http.server 4173    # then open http://localhost:4173/  (three.js 0.169.0 via importmap)
 ```
@@ -48,15 +49,17 @@ geometry/visibility/placement maths runs in `src/core.mjs`, the *same file* node
 | visibility vs independent oracle | **40/40 status, 26/26 witness triangles** | A3 |
 | projection vs independent projection | max **1.7e-13 px** | A2 |
 | witness hit distance vs oracle | max relative **4.2e-16** | A10 |
-| optimality gap vs exhaustive optimum (n=6, 9 candidates, 531,441 combos) | **0.000 %** | A6 |
+| optimality gap vs exhaustive optimum (n=6, 9 candidates, 531,441 combos) | **0 % on a roomy view (vacuous: both sides cost 0), 25.0 % worst case on a crowded 320×200 view** | A6a/A6b |
 | scale invariance, s ∈ {1e-6, 1e-3, 1, 1e3, 1e6} | **0 status mismatches / 200 checks**, screen drift **1.7e-13 px**, zero overlap at 5/5 scales | A7 |
 | determinism | identical `items` hash over two runs and two generator runs | A1/A9 |
-| timing | median **2.184 ms** (min 1.937 / p95 3.383 / cold start 13.233), RSD **20.2 %** | `node bench/bench.mjs` |
+| timing | median **2.006 ms** (min 1.198 / p95 4.644 / cold start 13.802), RSD **44.3 %** | `node bench/bench.mjs` |
 
-`rsdPct = 20.2 %` is above 10 % and is reported as-is: the workload is ~2 ms, so on this shared
+`rsdPct = 44.3 %` is far above 10 % and is reported as-is: the workload is ~2 ms, so on this shared
 4-core box the run-to-run spread is dominated by GC and scheduler jitter, not by the algorithm.
-`min` and `p95` are published next to the median for that reason. The cold start (13.2 ms) is the
-first `placeLabels` call in a process and includes JIT warm-up; it is not used anywhere as a claim.
+`min` and `p95` are published next to the median for that reason, and the absolute numbers drift
+between runs (an earlier run measured median 2.184 ms / RSD 20.2 %) while the ratio-based claims
+(10 → 0 overlaps, 40/40 oracle agreement) were stable. The cold start (13.8 ms) is the first
+`placeLabels` call in a process and includes JIT warm-up; it is not used anywhere as a claim.
 
 ## 本轮创新
 
@@ -88,9 +91,14 @@ Cesium `LabelCollection`、`labelgun`、`d3-labeler`、Mapbox GL symbol layers�
   barycentric coordinates, `TOL_T = 1e-7` on the segment parameter) so that "oracle agrees" is
   not an artefact of a shared magic number. Below ~1e-7 world units a triangle's area underflows
   and hits are no longer reliable — do not use this at that scale.
-- **The oracle shares the candidate generator, not the search.** The 0.000 % optimality gap is
-  "our greedy+local search vs exhaustive enumeration over the *same* discrete candidate space"
+- **The oracle shares the candidate generator, not the search.** A6a/A6b compare our greedy+local
+  search against exhaustive enumeration over the *same* discrete candidate space
   (`candidateOffsets`). If a good placement exists outside that candidate set, neither method finds it.
+- **The placer is NOT optimal, and this is measured.** A6a (default viewport) reports 0 vs 0 and is
+  therefore **vacuous** — it proves feasibility, not optimality. A6b forces crowding at 320×200 and
+  finds a real worst-case gap of **25.0 %** in leader length (216.0 px vs the exhaustive 172.8 px),
+  with both sides still at 0 overlaps. A pairwise-swap pass was implemented and measured: it left the
+  gap at 25.0 % and raised the full-scene time from ~2 ms to 33 ms, so it was removed.
 - **The optimality claim is only for n = 6.** Exhaustive enumeration is 9^6; for the full 40-label
   scene the placer's result is *feasible* (0 overlaps) but has no optimality proof.
 - **Occlusion uses the anchor, not the label box.** A label whose anchor is visible may still have

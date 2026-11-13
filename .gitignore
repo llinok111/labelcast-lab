@@ -9,3 +9,5 @@ __pycache__/
 *.tgz
 *.7z
 data/*.tmp
+state/
+data/*.tmp

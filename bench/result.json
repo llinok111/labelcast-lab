@@ -16,53 +16,53 @@
   },
   "timings": {
     "placeLabels": {
-      "coldStartMs": 13.233,
+      "coldStartMs": 16.805,
       "n": 7,
-      "min": 1.937,
-      "p25": 1.967,
-      "median": 2.184,
-      "p75": 2.284,
-      "p95": 3.383,
-      "max": 3.383,
-      "mean": 2.287,
-      "stddev": 0.463,
-      "rsdPct": 20.228
+      "min": 2.744,
+      "p25": 3.386,
+      "median": 3.506,
+      "p75": 5.74,
+      "p95": 6.735,
+      "max": 6.735,
+      "mean": 4.208,
+      "stddev": 1.346,
+      "rsdPct": 31.994
     },
     "naivePlaceAtAnchor": {
       "n": 7,
-      "min": 0.076,
-      "p25": 0.1,
-      "median": 0.12,
-      "p75": 0.195,
-      "p95": 0.503,
-      "max": 0.503,
-      "mean": 0.182,
-      "stddev": 0.136,
-      "rsdPct": 74.792
+      "min": 0.072,
+      "p25": 0.072,
+      "median": 0.16,
+      "p75": 0.216,
+      "p95": 0.661,
+      "max": 0.661,
+      "mean": 0.207,
+      "stddev": 0.193,
+      "rsdPct": 93.143
     },
     "auditVisibility": {
       "n": 7,
-      "min": 1.094,
-      "p25": 1.137,
-      "median": 1.269,
-      "p75": 1.55,
-      "p95": 1.745,
-      "max": 1.745,
-      "mean": 1.343,
-      "stddev": 0.219,
-      "rsdPct": 16.296
+      "min": 1.123,
+      "p25": 1.192,
+      "median": 1.506,
+      "p75": 1.847,
+      "p95": 7.527,
+      "max": 7.527,
+      "mean": 2.277,
+      "stddev": 2.156,
+      "rsdPct": 94.703
     },
     "oracleVisibility": {
       "n": 7,
-      "min": 4.651,
-      "p25": 4.663,
-      "median": 4.846,
-      "p75": 5.504,
-      "p95": 12.681,
-      "max": 12.681,
-      "mean": 6.017,
-      "stddev": 2.734,
-      "rsdPct": 45.438
+      "min": 4.231,
+      "p25": 5.117,
+      "median": 5.535,
+      "p75": 7.275,
+      "p95": 15.162,
+      "max": 15.162,
+      "mean": 7.004,
+      "stddev": 3.451,
+      "rsdPct": 49.272
     }
   },
   "occlusionMicro": {
@@ -70,7 +70,7 @@
       "rayCount": 40,
       "triangleCount": 302,
       "rayTriangleTests": 12080,
-      "ms": 4.097
+      "ms": 4.111
     }
   },
   "placement": {
