@@ -4,7 +4,7 @@
 placer removes every screen-space box overlap — 10 overlapping pairs → 0 (baseline
 `baseline/naive.mjs`, which is what "draw a div at the projected anchor" gives you) — while
 every label also carries a `visible / occluded / behind` verdict with the **blocking triangle
-as a witness**, reproduced 40/40 by an independent oracle. 2.006 ms median per full placement
+as a witness**, reproduced 40/40 by an independent oracle. 1.936 ms median per full placement
 (302 triangles × 40 labels, 12,080 ray-triangle tests). On crowded 6-label views the placement is
 **up to 25.0 % above the exhaustive optimum** (`bench/oracle.mjs`, 531,441 combinations) — the
 greedy+local search is a fast feasible heuristic, *not* an optimal one, and the README says so.**
@@ -52,14 +52,16 @@ geometry/visibility/placement maths runs in `src/core.mjs`, the *same file* node
 | optimality gap vs exhaustive optimum (n=6, 9 candidates, 531,441 combos) | **0 % on a roomy view (vacuous: both sides cost 0), 25.0 % worst case on a crowded 320×200 view** | A6a/A6b |
 | scale invariance, s ∈ {1e-6, 1e-3, 1, 1e3, 1e6} | **0 status mismatches / 200 checks**, screen drift **1.7e-13 px**, zero overlap at 5/5 scales | A7 |
 | determinism | identical `items` hash over two runs and two generator runs | A1/A9 |
-| timing | median **2.006 ms** (min 1.198 / p95 4.644 / cold start 13.802), RSD **44.3 %** | `node bench/bench.mjs` |
+| timing | median **1.936 ms** (min 1.164 / p95 4.726 / cold start 14.307), RSD **44.2 %** | `node bench/bench.mjs` |
 
-`rsdPct = 44.3 %` is far above 10 % and is reported as-is: the workload is ~2 ms, so on this shared
+`rsdPct = 44.2 %` is far above 10 % and is reported as-is: the workload is ~2 ms, so on this shared
 4-core box the run-to-run spread is dominated by GC and scheduler jitter, not by the algorithm.
-`min` and `p95` are published next to the median for that reason, and the absolute numbers drift
-between runs (an earlier run measured median 2.184 ms / RSD 20.2 %) while the ratio-based claims
-(10 → 0 overlaps, 40/40 oracle agreement) were stable. The cold start (13.8 ms) is the first
-`placeLabels` call in a process and includes JIT warm-up; it is not used anywhere as a claim.
+`min` and `p95` are published next to the median for that reason. **The timing row above is quoted
+verbatim from the committed `bench/result.json`; re-running `bench.mjs` overwrites that file with a
+new run and the absolute milliseconds will move (observed range across runs: median 1.77–3.51 ms),
+while the ratio-based claims (10 → 0 overlaps, 40/40 oracle agreement) stayed identical.** The cold
+start (14.3 ms) is the first `placeLabels` call in a process and includes JIT warm-up; it is not
+used anywhere as a claim.
 
 ## 本轮创新
 
@@ -67,9 +69,10 @@ between runs (an earlier run measured median 2.184 ms / RSD 20.2 %) while the ra
 CSS2DRenderer 式的“把 div 钉在投影点上”，而是给出三态判定 + 遮挡三角形见证（A3/A10 由独立
 oracle 复核），再在该判定之上做离散候选的零重叠布局（A4/A6）。three.js 的 `CSS2DRenderer` 既不
 做碰撞规避也不做遮挡测试；GIS 的 label declutter（如 Cesium `LabelCollection`）做屏幕空间去重，
-但不返回遮挡见证、也不给出可复算的审计对象。本仓的差异化证据是：**同一份 `src/core.mjs` 在 node
-与浏览器里跑，页面上显示的 overlaps / visible / occluded 与 node 烘焙的 `data/reference.json`
-逐项比对**（HUD 里的 "vs node bake" 一行），"所见即所验"。
+但不返回遮挡见证、也不给出可复算的审计对象。本仓的设计目标是**同一份 `src/core.mjs` 同时被 node 与页面引用**，页面把
+overlaps / visible / occluded 与 node 烘焙的 `data/reference.json` 逐项比对（HUD 里的
+"vs node bake" 一行）。**但本轮无头环境没有真正执行过页面 JS**（只验了 200 + importmap +
+`main.js` 静态检查），所以这是**接线**，不是已跑的浏览器证据——见 Known limits 最后一条。
 
 **诚实边界（独立 prior-art 复核后的定档理由，2026-11-13）**：屏幕空间的点要素标注去重是 1990 年代
 就成熟的教科书问题（Christensen/Marks/Shieber 1995, *ACM TOG*, DOI 10.1145/212332.212334；
@@ -97,8 +100,9 @@ Cesium `LabelCollection`、`labelgun`、`d3-labeler`、Mapbox GL symbol layers�
 - **The placer is NOT optimal, and this is measured.** A6a (default viewport) reports 0 vs 0 and is
   therefore **vacuous** — it proves feasibility, not optimality. A6b forces crowding at 320×200 and
   finds a real worst-case gap of **25.0 %** in leader length (216.0 px vs the exhaustive 172.8 px),
-  with both sides still at 0 overlaps. A pairwise-swap pass was implemented and measured: it left the
-  gap at 25.0 % and raised the full-scene time from ~2 ms to 33 ms, so it was removed.
+  with both sides still at 0 overlaps. A pairwise-swap local-search pass was tried locally and
+  discarded (it did not reduce the gap and was much slower); it is **not** in the committed history,
+  so treat that as a note, not as evidence — the only placement evidence in this repo is A4/A5/A6.
 - **The optimality claim is only for n = 6.** Exhaustive enumeration is 9^6; for the full 40-label
   scene the placer's result is *feasible* (0 overlaps) but has no optimality proof.
 - **Occlusion uses the anchor, not the label box.** A label whose anchor is visible may still have
